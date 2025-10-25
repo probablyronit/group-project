@@ -6,6 +6,8 @@
 #include <QRect>
 #include <QList>
 #include <QKeyEvent>
+#include "dino.h"
+#include "obstacle.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -40,18 +42,16 @@ private:
     enum GameState { Ready, Playing, GameOver };
     GameState gameState;
 
-    QRect dino;
-    int dinoVelocityY;
-    bool isGrounded;
+    Dino dino;
 
-    QList<QRect> obstacles;
+    QList<Obstacle> obstacles;
     int gameSpeed;
     int score;
     int highScore;
 
     // Constants for game physics and appearance
     const int GROUND_LEVEL = 350;
-    const int DINO_JUMP_STRENGTH = -18;
-    const int GRAVITY = 1;
+    const double DINO_JUMP_STRENGTH = -18;
+    const double GRAVITY = 1;
 };
 #endif // MAINWINDOW_H
