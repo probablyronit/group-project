@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     setFixedSize(800, 400);
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
+    dino=Dino(QRect(50, GROUND_LEVEL - 50, 40, 50),GRAVITY,DINO_JUMP_STRENGTH,GROUND_LEVEL);
     highScore = 0;
     resetGame();
 }
@@ -25,13 +26,10 @@ void MainWindow::resetGame() {
     gameState = Ready;
     score = 0;
     gameSpeed = 5;
-
-    dino = QRect(50, GROUND_LEVEL - 50, 40, 50);
-    dinoVelocityY = 0;
-    isGrounded = true;
     obstacles.clear();
     spawnObstacle();
     timer->stop();
+    dino.reset();
     update();
 }
 
@@ -43,39 +41,38 @@ void MainWindow::gameLoop() {
 }
 
 void MainWindow::updateGame() {
-    if (!isGrounded) {
-        dinoVelocityY += GRAVITY;
-        dino.moveTop(dino.top() + dinoVelocityY);
-    }
-    if (dino.bottom() >= GROUND_LEVEL) {
-        dino.moveBottom(GROUND_LEVEL);
-        dinoVelocityY = 0;
-        isGrounded = true;
-    }
+    dino.update();
     for (int i = 0; i < obstacles.size(); ++i) {
-        obstacles[i].moveLeft(obstacles[i].left() - gameSpeed);
-        if (dino.intersects(obstacles[i])) {
-            gameState = GameOver;
-            timer->stop();
-            if (score > highScore) {
-                highScore = score;
-            }
-            return;
+        obstacles[i].update(gameSpeed);
+        if (dino.intersects(obstacles[i]) && !dino.isInvincible()) {
+            dino.decLives();
+            dino.setInvincibility(true);
+            dino.invincibilityTimeOut();//set invincible false after timeout
+            dino.takeDamgage();//animation
         }
     }
-    if (!obstacles.isEmpty() && obstacles.first().right() < 0) {
+    if(dino.gameover()){
+        gameState = GameOver;
+        timer->stop();
+        if (score > highScore) {
+            highScore = score;
+        }
+        return;
+    }
+    if (!obstacles.isEmpty() && obstacles.first().isOffScreen()) {
         obstacles.removeFirst();
     }
-    if (obstacles.last().right() < width() - QRandomGenerator::global()->bounded(250, 500)) {
+    if (obstacles.last().getRect().right() < width() - QRandomGenerator::global()->bounded(250, 500)) {
         spawnObstacle();
     }
     score++;
+    if(score%LEVEL_INC_SCORE_GAP==0){
+        increaseLevel();
+    }
 }
 
 void MainWindow::spawnObstacle() {
-    int obstacleHeight = QRandomGenerator::global()->bounded(30, 60);
-    int obstacleWidth = 20;
-    obstacles.append(QRect(width(), GROUND_LEVEL - obstacleHeight, obstacleWidth, obstacleHeight));
+    obstacles.append(Obstacle(width(),GROUND_LEVEL,getProbability(Obstacle::BIRD_PROB)?Obstacle::Bird:Obstacle::Cactus));
 }
 
 void MainWindow::paintEvent(QPaintEvent *event) {
@@ -83,12 +80,12 @@ void MainWindow::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.fillRect(rect(), Qt::darkGray);
     painter.setPen(QPen(Qt::white, 2));
+    dino.draw(painter);
     painter.drawLine(0, GROUND_LEVEL, width(), GROUND_LEVEL);
-    painter.fillRect(dino, Qt::white);
     painter.setBrush(Qt::green);
     painter.setPen(Qt::NoPen);
-    for (const QRect &obstacle : obstacles) {
-        painter.drawRect(obstacle);
+    for (Obstacle &obstacle : obstacles) {
+        obstacle.draw(painter);
     }
     painter.setPen(Qt::white);
     painter.setFont(QFont("Consolas", 16));
@@ -109,10 +106,7 @@ void MainWindow::paintEvent(QPaintEvent *event) {
 void MainWindow::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Space) {
         if (gameState == Playing) {
-            if (isGrounded) {
-                isGrounded = false;
-                dinoVelocityY = DINO_JUMP_STRENGTH;
-            }
+            dino.jump();
         } else {
             resetGame();
             gameState = Playing;
@@ -121,4 +115,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     } else {
         QMainWindow::keyPressEvent(event);
     }
+}
+
+bool MainWindow::getProbability(float prob){
+    return QRandomGenerator::global()->generateDouble()<prob;
+}
+
+void MainWindow::increaseLevel(){
+    gameSpeed++;
 }
