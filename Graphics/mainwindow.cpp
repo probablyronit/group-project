@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     setFixedSize(800, 400);
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
+    dino=Dino(QRect(50, GROUND_LEVEL - 50, 40, 50),GRAVITY,DINO_JUMP_STRENGTH,GROUND_LEVEL);
     highScore = 0;
     resetGame();
 }
@@ -25,10 +26,10 @@ void MainWindow::resetGame() {
     gameState = Ready;
     score = 0;
     gameSpeed = 5;
-    dino=Dino(QRect(50, GROUND_LEVEL - 50, 40, 50),GRAVITY,DINO_JUMP_STRENGTH,GROUND_LEVEL);
     obstacles.clear();
     spawnObstacle();
     timer->stop();
+    dino.reset();
     update();
 }
 
@@ -43,14 +44,20 @@ void MainWindow::updateGame() {
     dino.update();
     for (int i = 0; i < obstacles.size(); ++i) {
         obstacles[i].update(gameSpeed);
-        if (dino.intersects(obstacles[i])) {
-            gameState = GameOver;
-            timer->stop();
-            if (score > highScore) {
-                highScore = score;
-            }
-            return;
+        if (dino.intersects(obstacles[i]) && !dino.isInvincible()) {
+            dino.decLives();
+            dino.setInvincibility(true);
+            dino.invincibilityTimeOut();//set invincible false after timeout
+            dino.takeDamgage();//animation
         }
+    }
+    if(dino.gameover()){
+        gameState = GameOver;
+        timer->stop();
+        if (score > highScore) {
+            highScore = score;
+        }
+        return;
     }
     if (!obstacles.isEmpty() && obstacles.first().isOffScreen()) {
         obstacles.removeFirst();
@@ -59,10 +66,13 @@ void MainWindow::updateGame() {
         spawnObstacle();
     }
     score++;
+    if(score%LEVEL_INC_SCORE_GAP==0){
+        increaseLevel();
+    }
 }
 
 void MainWindow::spawnObstacle() {
-    obstacles.append(Obstacle(width(),GROUND_LEVEL));
+    obstacles.append(Obstacle(width(),GROUND_LEVEL,getProbability(Obstacle::BIRD_PROB)?Obstacle::Bird:Obstacle::Cactus));
 }
 
 void MainWindow::paintEvent(QPaintEvent *event) {
@@ -105,4 +115,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     } else {
         QMainWindow::keyPressEvent(event);
     }
+}
+
+bool MainWindow::getProbability(float prob){
+    return QRandomGenerator::global()->generateDouble()<prob;
+}
+
+void MainWindow::increaseLevel(){
+    gameSpeed++;
 }

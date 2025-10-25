@@ -8,6 +8,7 @@
 class Obstacle{
     friend class Dino;
 public:
+    constexpr static double BIRD_PROB=0.1;
     enum Type { Cactus, Bird }; // More can be added later
 
     // Constructor
@@ -26,11 +27,12 @@ public:
 
     // spawn obstacle
     static void spawnObstacle(){
-
+        //implemented in mainwnidow
     }
 
 private:
     QRect rect;
+    QColor OBS_CLR;
     Type type;
 };
 
