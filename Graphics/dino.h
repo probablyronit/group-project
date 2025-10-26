@@ -27,10 +27,12 @@ public:
     inline bool gameover(){return lives<=0;}
     inline bool isInvincible(){return invincible;}
     void setInvincibility(bool arg){invincible=arg;};
+    int getBottom(){return std::max_element(dinoShape.begin(), dinoShape.end(),[](auto &a, auto &b){ return a.y() < b.y(); })->y();}
 
 
 private:
     QRect dinoRect;    // hitbox rectangle (x, y, w, h)
+    QPolygon dinoShape;
     float velocityY;   // vertical speed (for jumping)
     bool onGround;     // grounded state
     bool doubleJump=true;// for double jump mechanics
@@ -44,6 +46,10 @@ private:
     static const int INVINCIBLE_TIMESPAN_MS = 1000; // once hit, a short span of time for invincibility
     QColor DINO_CLR = Qt::white;
     constexpr static QColor DAMAGE_CLR = QColor(255, 80, 80);
+
+    //functions :
+    void movePolygonBottom(QPolygon &poly, int newBottomY);
+
 };
 
 #endif // DINO_H

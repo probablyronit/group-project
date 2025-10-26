@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     setFixedSize(800, 400);
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
-    dino=Dino(QRect(50, GROUND_LEVEL - 50, 40, 50),GRAVITY,DINO_JUMP_STRENGTH,GROUND_LEVEL);
+    dino=Dino(QRect(50, GROUND_LEVEL - 50, 30, 50),GRAVITY,DINO_JUMP_STRENGTH,GROUND_LEVEL);
     highScore = 0;
     resetGame();
 }
