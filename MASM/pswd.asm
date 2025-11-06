@@ -4,14 +4,20 @@
 .STACK 100h
 
 .DATA
-prompt      db 0Dh,0Ah,'Enter password: $'
-ok_msg      db 0Dh,0Ah,'Access Granted.$'
-wrong_msg   db 0Dh,0Ah,'Incorrect password. Try again.$'
-locked_msg  db 0Dh,0Ah,'LOCKED.$'
+half_screen db 0Dh,0Dh,0Dh,0Dh,0Dh,0Dh,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,'$'
+middle_adjustment db 0Dh,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,'$'
+prompt      db 'Enter password: $'
+ok_msg      db 'Access Granted.$'
+wrong_msg   db 'Incorrect password. Try again.$'
+locked_msg  db 'LOCKED.$'
 
 ; Hardcoded password (ASCII)
-pwd         db 'password'    ; 8 bytes, case-sensitive
-pwd_len     equ 8
+pwd         db '@CSEju25' 
+pwd_len equ 8
+pwd2 db 'Cse25'
+pwd_len1 equ 5
+pwd3 db 'cse'   ; 8 bytes, case-sensitive
+pwd_len2     equ 3
 
 ; input buffer
 MAXLEN      equ 12
@@ -62,8 +68,7 @@ do_backspace:
     mov bl, [inlen]
     cmp bl, 0
     je read_loop
-    dec bl
-    mov [inlen], bl
+    dec byte ptr inlen
     ; optional: physically don't erase on screen because we never echoed
     jmp read_loop
 
@@ -117,8 +122,14 @@ MAIN PROC
     mov ds,ax
 
     mov cx, 3          ; up to 3 tries
-
+    lea dx,half_screen
+    call print_str
 try_again:
+    ;align
+    lea dx, half_screen
+    call print_str
+    lea dx, middle_adjustment
+    call print_str
     ; prompt
     lea dx, prompt
     call print_str
@@ -132,7 +143,11 @@ try_again:
     je access_granted
 
     ; incorrect
+    lea dx, middle_adjustment
+    call print_str
     lea dx, wrong_msg
+    call print_str
+    lea dx,half_screen
     call print_str
 
     dec cx
@@ -140,11 +155,15 @@ try_again:
     jne try_again
 
     ; locked
+    lea dx, middle_adjustment
+    call print_str
     lea dx, locked_msg
     call print_str
-    jmp exit              ; halt (infinite loop)
+    jmp exit              ; exit program
 
 access_granted:
+    lea dx,middle_adjustment
+    call print_str
     lea dx, ok_msg
     call print_str
 exit:

@@ -15,6 +15,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QWidget>
+#include <my_label.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -22,6 +23,7 @@ class Ui_MainWindow
 {
 public:
     QWidget *centralwidget;
+    my_label *frame;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -29,13 +31,16 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName("MainWindow");
-        MainWindow->resize(1039, 697);
+        MainWindow->resize(885, 796);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName("centralwidget");
+        frame = new my_label(centralwidget);
+        frame->setObjectName("frame");
+        frame->setGeometry(QRect(20, 0, 831, 761));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 1039, 25));
+        menubar->setGeometry(QRect(0, 0, 885, 25));
         MainWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName("statusbar");
@@ -49,6 +54,7 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
+        frame->setText(QCoreApplication::translate("MainWindow", "TextLabel", nullptr));
     } // retranslateUi
 
 };
